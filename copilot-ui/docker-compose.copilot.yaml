@@ -1,0 +1,37 @@
+# Malcolm Copilot — Docker Compose Service Definition
+#
+# Add this service to Malcolm's docker-compose.yml or use as an override:
+#   docker-compose -f docker-compose.yml -f copilot-ui/docker-compose.copilot.yml up
+#
+# The copilot-ui service serves the React frontend on port 3000 and proxies
+# /api/ requests to the malcolm-llm-gateway container (when it exists).
+
+services:
+  copilot-ui:
+    build:
+      context: .
+      dockerfile: Dockerfiles/copilot-ui.Dockerfile
+    image: ghcr.io/idaholab/malcolm/copilot-ui:latest
+    profiles: ["malcolm"]
+    logging:
+      driver: local
+      options:
+        max-size: 200m
+        max-file: 2
+        compress: "false"
+    restart: "no"
+    stdin_open: false
+    tty: true
+    hostname: copilot-ui
+    networks:
+    - default
+    expose:
+    - 3000
+    # Uncomment when the LLM gateway container exists:
+    # depends_on:
+    #   - malcolm-llm-gateway
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
